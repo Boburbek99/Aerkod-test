@@ -24,5 +24,8 @@ export default defineConfig(() => {
         return acc;
       }, {}),
     },
+    build: {
+      outDir: 'build',
+    },
   }
 });
