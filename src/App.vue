@@ -1,8 +1,6 @@
 <script setup>
 </script>
-
 <template>
-
   <div class="block-main ">
     <transition name="fade" mode="out-in">
       <router-view class="router-main"></router-view>

@@ -1,6 +1,6 @@
 <script setup>
 import Modal from '@/components/Modal.vue';
-import PasswordForm from '../components/PasswordForm.vue';
+import PasswordForm from '@/components/PasswordForm.vue';
 </script>
 <template>
     <section class="d-flex-column my-5 my-auto">
