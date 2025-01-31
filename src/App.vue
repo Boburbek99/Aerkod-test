@@ -1,19 +1,12 @@
 <script setup>
-// import { passwordStore } from "@/stores/passwordStore.js";
-import { onBeforeMount } from "vue";
-import { useRoute } from "vue-router";
-// const route = useRoute();
-// const passwordStore = useAuthStore();
-
-// onBeforeMount(() => {
-//   authService.checkCookies();
-// });
 </script>
 
 <template>
 
   <div class="block-main ">
-    <router-view class="router-main"></router-view>
+    <transition name="fade" mode="out-in">
+      <router-view class="router-main"></router-view>
+    </transition>
   </div>
 
 </template>

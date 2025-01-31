@@ -1,36 +1,17 @@
-// import { defineStore } from "pinia";
-// import Cookies from "js-cookie";
-
-// export const usePasswordStore = defineStore("password", {
-//     state: () => ({
-//         password: null,
-//         service: null,
-//     }),
-//     actions: {
-//         pass(password, service) {
-//             this.password = password;
-//             this.service = service;
-//             this.saveToStorage();
-//         },
-//         saveToStorage() {
-//             Cookies.set("password", this.password);
-//             Cookies.set("service", this.service);
-//         },
-//         checkStorage() {
-//             const password = Cookies.get("password");
-//             const service = Cookies.get("service");
-
-//             if (password && service) {
-//                 this.pass(password, service);
-//             }
-//         },
-//     },
-//     getters: {
-//         isActiveUser: (state) => state.password && state.service,
-//     },
-// });
 import { defineStore } from 'pinia';
 import Cookies from 'js-cookie';
+import CryptoJS from 'crypto-js';
+
+const secretKey = 'secret-key';
+
+function encryptData(data) {
+    return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+}
+
+function decryptData(encryptedData) {
+    const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+    return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+}
 
 export const usePasswordStore = defineStore('passwordStore', {
     state: () => ({
@@ -38,25 +19,50 @@ export const usePasswordStore = defineStore('passwordStore', {
     }),
     actions: {
         addPassword(service, password) {
-            this.passwords.push({ service, password });
+            if (!service || !password) {
+                throw new Error('Service and password cannot be empty');
+            }
+            const existingService = this.passwords.find(item => item.service === service);
+            if (existingService) {
+                throw new Error('Password for this service already exists');
+            }
+            this.passwords.push({
+                service,
+                password,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            });
             this.saveToCookies();
         },
-        removePassword(service) {
-            this.passwords = this.passwords.filter(item => item.service !== service);
-            this.saveToCookies();
-        },
-
-        loadFromCookies() {
-            const data = Cookies.get('passwords');
-            if (data) {
-                this.passwords = JSON.parse(data);
+        removePassword(index) {
+            if (index >= 0 && index < this.passwords.length) {
+                this.passwords.splice(index, 1);
+                if (this.passwords.length === 0) {
+                    Cookies.remove('passwords');
+                } else {
+                    this.saveToCookies();
+                }
+            } else {
+                console.error('Invalid index:', index);
             }
         },
-
-        // Сохранение массива паролей в cookie
+        loadFromCookies() {
+            try {
+                const encryptedData = Cookies.get('passwords');
+                if (encryptedData) {
+                    this.passwords = decryptData(encryptedData);
+                }
+            } catch (error) {
+                console.error('Failed to load passwords from cookies:', error);
+            }
+        },
         saveToCookies() {
-            const serializedData = JSON.stringify(this.passwords);
-            Cookies.set('passwords', serializedData, { expires: 7 });
+            try {
+                const encryptedData = encryptData(this.passwords);
+                Cookies.set('passwords', encryptedData, { expires: 7 });
+            } catch (error) {
+                console.error('Failed to save passwords to cookies:', error);
+            }
         },
     },
 });
